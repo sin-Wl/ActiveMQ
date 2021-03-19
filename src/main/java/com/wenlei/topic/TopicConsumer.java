@@ -12,7 +12,7 @@ public class TopicConsumer {
 
 
     public static void main(String[] args) throws JMSException, IOException {
-        System.out.println("我是1消费者");
+        System.out.println("我是2消费者");
         //1 创建连接工厂，按照给定的url地址，采用默认的用户名和密码
         ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(ACTIVEMQ_URL);
         //2 通过链接工厂，获得连接connection并启动
