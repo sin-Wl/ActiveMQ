@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="
+                    http://www.springframework.org/schema/context
+                    http://www.springframework.org/schema/context/spring-context.xsd
+                    http://www.springframework.org/schema/beans
+                    http://www.springframework.org/schema/beans/spring-beans.xsd
+                    http://www.springframework.org/schema/tx
+                    http://www.springframework.org/schema/tx/spring-tx.xsd
+                    http://www.springframework.org/schema/aop
+                    http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!--开启包自动扫描-->
+    <context:component-scan base-package="com.wenlei.spring"/>
+    <!--配置生产者-->
+    <bean id="jmsFactory" class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop">
+        <property name="connectionFactory">
+            <!--真正可以产生Connection的ConnectionFactory，由对应的JMS服务厂商提供-->
+            <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+                <property name="brokerURL" value="tcp://192.168.108.129:61616"/>
+            </bean>
+        </property>
+        <property name="maxConnections" value="100"/>
+    </bean>
+    <!--队列的目的地，点对点传输模式-->
+    <bean id="destnationQueue" class="org.apache.activemq.command.ActiveMQQueue">
+        <!--队列的名称是spring-active-quque-->
+        <constructor-arg index="0" value="spring-active-quque"/>
+    </bean>
+
+    <!--**** 增加的 主题的目的地，发布订阅传输模式 **** -->
+    <bean id="destnationTopic" class="org.apache.activemq.command.ActiveMQTopic">
+        <!--主题的名称是spring-active-topic-->
+        <constructor-arg index="0" value="spring-active-topic"/>
+    </bean>
+
+    <!--Spring提供的JMS工具表，它可以进行消息发送、接收等-->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="jmsFactory"/>
+        <property name="defaultDestination" ref="destnationTopic"/>     <!--队列和主题的切换只需要改变defaultDestination对应的ref-->
+        <property name="messageConverter">
+            <bean class="org.springframework.jms.support.converter.SimpleMessageConverter"/>
+        </property>
+    </bean>
+
+
+    <!--配置监听程序-->
+    <bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsFactory"/>
+        <!--*** 这里也要对应目的地是topic start*** -->
+        <property name="destination" ref="destnationTopic"/>
+        <!--*** 这里也要对应目的地是topic end*** -->
+        <property name="messageListener" ref="myMessageListener"/>
+    </bean>
+
+
+
+</beans>
